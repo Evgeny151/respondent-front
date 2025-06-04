@@ -6,15 +6,17 @@ const QuestionContext = createContext<{
   setRespondents: (respondents: string[]) => void
   questions: Question[]
   setQuestions: (questions: Question[]) => void
-  researchDescrition: Record<string, string>
-  setResearchDescrition: (description: Record<string, string>) => void
+  researchDescription: Record<string, string>
+  setresearchDescription: (description: Record<string, string>) => void
+  clear: () => void
 }>({
   respondents: [],
   setRespondents: () => {},
   questions: [],
   setQuestions: () => {},
-  researchDescrition: {},
-  setResearchDescrition: () => {},
+  researchDescription: {},
+  setresearchDescription: () => {},
+  clear: () => {},
 })
 
 export const useQuestionContext = () => {
@@ -28,15 +30,20 @@ export const useQuestionContext = () => {
 export const QuestionProvider = ({ children }: { children: ReactNode }) => {
   const [respondents, setRespondents] = useState<string[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
-  const [researchDescrition, setResearchDescrition] = useState({})
+  const [researchDescription, setresearchDescription] = useState({})
 
   const value = {
     respondents,
     setRespondents,
     questions,
     setQuestions,
-    researchDescrition,
-    setResearchDescrition,
+    researchDescription,
+    setresearchDescription,
+    clear: () => {
+      setRespondents([])
+      setQuestions([])
+      setresearchDescription({})
+    }
   }
 
   return (

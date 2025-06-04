@@ -4,7 +4,6 @@ import axios from 'axios'
 import { useQuestionContext } from '../questionContext'
 
 export interface Data {
-  _id: string
   to_send: string
   user_id: string
   username: string
@@ -32,6 +31,7 @@ export interface Data {
   time: string
   privacy: string
   answers: Answers
+  telegram_id?: string
 }
 
 interface Answers {
@@ -66,15 +66,30 @@ const labelMapping = {
   time: 'Удобное время для связи',
 }
 
+// Безопасная вспомогательная функция: корректно обрабатывает undefined, null, массивы и объекты
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function safeIncludes(field: any, value: any): boolean {
+  if (field === null || field === undefined) return false
+
+  const valStr = String(value ?? '')
+
+  if (Array.isArray(field)) {
+    return field.some(item => String(item ?? '').includes(valStr))
+  }
+
+  if (typeof field === 'object') {
+    try {
+      return JSON.stringify(field).includes(valStr)
+    } catch {
+      return String(field).includes(valStr)
+    }
+  }
+
+  return String(field).includes(valStr)
+}
+
 export const Step1 = () => {
-  // const [selectedRows, setSelectedRows] = useState<Data[]>([])
-
   const { respondents: selectedRowKeys, setRespondents } = useQuestionContext()
-
-  // useEffect(() => {
-  //   const keys = selectedRows.map((row) => row._id)
-  //   setRespondents(keys)
-  // }, [selectedRows, setRespondents])
 
   const {
     data: respondents,
@@ -98,26 +113,23 @@ export const Step1 = () => {
     )
   }
 
-  const hiddenfields = new Set([
-    // 'answers',
-    // '__v',
-    '_id',
-    // 'to_send',
-    // 'user_id',
-    // 'username',
-    // 'name',
-    // 'privacy',
-  ])
-
+  // Собираем возможные значения для фильтров.
+  // Приводим значения к строкам заранее, чтобы в UI не попасть на [object Object]
   const filters =
     respondents?.data.reduce((acc, respondent) => {
       Object.entries(respondent).forEach(([key, value]) => {
+        const v = value === undefined || value === null
+          ? ''
+          : typeof value === 'object'
+            ? JSON.stringify(value)
+            : String(value)
+
         if (!acc[key]) {
-          acc[key] = [value]
+          acc[key] = [v]
           return
         }
 
-        acc[key].push(value)
+        acc[key].push(v)
       })
 
       return acc
@@ -126,7 +138,7 @@ export const Step1 = () => {
   const columns: TableColumnsType<Data> = Object.keys(
     respondents?.data?.[0] ?? {},
   )
-    .filter((f) => !hiddenfields.has(f))
+    .filter(f => f !== 'telegram_id')
     .map((key) => ({
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
@@ -134,14 +146,14 @@ export const Step1 = () => {
       dataIndex: key,
       key: key,
       filters:
-        [...new Set(filters[key])].map((v) => ({
+        (filters[key] ? [...new Set(filters[key])] : []).map((v) => ({
           text: v,
           value: v,
         })) ?? [],
       onFilter: (value, record) =>
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        //@ts-expect-error
-        (record[key] as string).includes(value as string),
+        // используем безопасную проверку вместо прямого .includes
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        safeIncludes((record as any)[key], value),
       render:
         key === 'age'
           ? (text: string) => (
@@ -150,15 +162,11 @@ export const Step1 = () => {
           : undefined,
     }))
 
-  const data = (respondents?.data ?? []).map((respondent) => ({
-    key: respondent._id,
-    ...respondent,
-  }))
-
   return (
     <div style={{ overflowY: 'scroll' }}>
       <Typography.Text>Выбрано: {selectedRowKeys.length}</Typography.Text>
       <Table<Data>
+        rowKey="telegram_id"
         size='small'
         rowSelection={{
           selectedRowKeys,
@@ -167,7 +175,7 @@ export const Step1 = () => {
           },
         }}
         columns={columns}
-        dataSource={data}
+        dataSource={respondents?.data}
         loading={isLoading}
         pagination={{ position: ['topLeft', 'bottomRight'] }}
       />
@@ -175,3 +183,4 @@ export const Step1 = () => {
     </div>
   )
 }
+

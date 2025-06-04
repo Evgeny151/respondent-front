@@ -6,7 +6,7 @@ const style = { textAlign: 'start' } as const
 export const Step3 = () => {
   const [form] = Form.useForm()
 
-  const { setResearchDescrition, researchDescrition } = useQuestionContext()
+  const { setresearchDescription, researchDescription } = useQuestionContext()
 
   const { research_name, date, payment, description, format, duration } =
     Form.useWatch([], form) ?? {}
@@ -24,9 +24,9 @@ export const Step3 = () => {
         name='control-hooks'
         layout='vertical'
         onFieldsChange={() => {
-          setResearchDescrition(form.getFieldsValue())
+          setresearchDescription(form.getFieldsValue())
         }}
-        initialValues={researchDescrition}
+        initialValues={researchDescription}
       >
         <Form.Item name='research_name' label='Название исследования'>
           <Input.TextArea placeholder='Интервью пользователей приложения для прослушивания музыки' />
