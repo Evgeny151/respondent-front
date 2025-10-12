@@ -36,6 +36,8 @@ export const MainPage = () => {
   const [current, setCurrent] = useState(0)
   const { respondents, questions, researchDescription, clear } =
     useQuestionContext()
+  console.log("questions", questions);
+  
     
   const { mutate, isPending } = useMutation({
     mutationFn: createSurvey,
@@ -71,7 +73,7 @@ export const MainPage = () => {
           </Button>
         )}
         {current < steps.length - 1 && (
-          <Button type='primary' onClick={() => next()}>
+          <Button disabled={!respondents.length || !questions.length} type='primary' onClick={() => next()}>
             Дальше
           </Button>
         )}

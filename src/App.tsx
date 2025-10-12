@@ -8,6 +8,8 @@ import { QuestionProvider } from './questionContext'
 const queryClient = new QueryClient()
 
 function App() {
+  console.log("CI");
+  
   return (
     <>
       <QueryClientProvider client={queryClient}>
